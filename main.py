@@ -2,11 +2,7 @@
 main program to implement specific functions.
 """
 
-import sys
-import win32event
-import win32api
-
-from ui_functions import *
+from pvz import *
 
 """
 如无特别声明，以下数字代表的含义：
@@ -30,13 +26,13 @@ class Train:
         :return: None.
         """
         time.sleep(0.1)
-        self.target.game.set_scene(1)
-        self.target.game.put_vase(4, 8, 4, 1, 17, 0, 0)
+        self.target.set_scene(1)
+        self.target.put_vase(4, 8, 4, 1, 17, 0, 0)
         print("NIGHT scene set.")
 
         PLA_ROW = random.choice((1, 2, 3))
         PLA_COL = level + 1
-        self.target.game.put_plant(
+        self.target.put_plant(
             plant_type=25,
             row=PLA_ROW,
             col=PLA_COL,
@@ -53,7 +49,7 @@ class Train:
                 if (VAS_ROW - PLA_ROW) ** 2 + (VAS_COL - PLA_COL) ** 2 in (1, 2):
                     VAS_POS = VAS_ROW * 3 + VAS_COL - 2
                     MAP.append([VAS_POS, SOURCE[VAS_POS]])
-                    self.target.game.put_vase(
+                    self.target.put_vase(
                         row=VAS_ROW,
                         col=VAS_COL,
                         vase_type=3,
@@ -66,17 +62,17 @@ class Train:
         print("MAP: ", MAP)
 
         time.sleep(wait_time)
-        self.target.game.put_zombie(
+        self.target.put_zombie(
             zombie_type=1, row=PLA_ROW, col=PLA_COL
         )
         print("FLAG_ZOMBIE zombie placed.")
 
-        self.target.game.put_plant(40, PLA_ROW, 0, 0)
+        self.target.put_plant(40, PLA_ROW, 0, 0)
         print("GATLING_PEA plant put.")
 
         time.sleep(3)
         QUE = random.choice(MAP)
-        self.target.game.put_vase(
+        self.target.put_vase(
             row=2,
             col=7,
             vase_type=3,
@@ -176,7 +172,7 @@ class Puzzle:  # 珍珑
     def csv_import(self):  # 从.csv文件中导入阵型设置
         import csv
         self.islocked = False
-        with open(file='./imports/rules_set.csv', mode='r') as fr:
+        with open(file='imports/rules_set.csv', mode='r') as fr:
             frr = csv.reader(fr)  # file_rules_reader
             items_rules = []  # [[['0'],[罐子样式规则],[项目罗列]], ...]
             cnt = 0
@@ -198,7 +194,7 @@ class Puzzle:  # 珍珑
                 cnt += 1
             self.item_rules = items_rules
             print("info: self.items_rules = ", self.item_rules)
-        with open(file='./imports/lineups_set.csv', mode='r') as fl:
+        with open(file='imports/lineups_set.csv', mode='r') as fl:
             flr = csv.reader(fl)  # file_lineups_reader
             source = self.item_rules[:]  # 复制下来规则
             for i in source:  # 打乱
@@ -234,13 +230,13 @@ class Puzzle:  # 珍珑
             self.item_info = items_info
 
     def show(self):  # 在self.target中展示该珍珑（需先手动打开场景）
-        self.target.game.set_scene(self.scene)
+        self.target.set_scene(self.scene)
         print("scene set successfully.")
         time.sleep(0.1)
 
         if self.islocked:
             for item in self.items:
-                self.target.game.put_vase(
+                self.target.put_vase(
                     row=item[2],
                     col=item[3],
                     vase_type=3,
@@ -256,7 +252,7 @@ class Puzzle:  # 珍珑
                     pos = y * 9 + x
                     li = self.item_info[pos]
                     if len(li) == 3:
-                        self.target.game.put_vase(
+                        self.target.put_vase(
                             row=y,
                             col=x,
                             vase_type=li[2],
@@ -272,18 +268,12 @@ class Puzzle:  # 珍珑
 
 
 if __name__ == '__main__':
-    mutex = win32event.CreateMutex(None, True, "PvZ Toolkit Python")
-    if win32api.GetLastError() == 0:
-        QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-        app = QApplication(sys.argv)
-        window = PvzToolkit()
-        print("waiting for game window...")  # 仅限年度加强版！
-        window.game.wait_for_game()
-        # window.show()
-        # training = Train(window)
-        # for i in range(2):
-        #     training.plantern_memorize(level=1, wait_time=1)
-        puzzling = Puzzle(window)
-        puzzling.ask_import()
-        puzzling.show()
-        # sys.exit(app.exec())
+    window = PvzModifier()
+    print("waiting for game window...")  # 仅限年度加强版！
+    window.wait_for_game()
+    # training = Train(window)
+    # for i in range(2):
+    #     training.plantern_memorize(level=1, wait_time=1)
+    puzzling = Puzzle(window)
+    puzzling.ask_import()
+    puzzling.show()

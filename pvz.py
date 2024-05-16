@@ -11,7 +11,6 @@ import copy
 
 from data import Data, Hack
 from asm_inject import AsmInjector, Reg
-from lineup import Lineup
 
 
 MAY_ASLEEP = [0, 0, 0, 0, 0, 0, 0, 0,
@@ -1016,127 +1015,128 @@ class PvzModifier:
             return
         self.hack(self.data.plants_growup, status)
 
-    def get_lineup(self):
-        if not self.is_open():
-            return
-        ui = self.game_ui()
-        lineup = Lineup()
-        lineup.scene = self.get_scene()
-        if ui != 2 and ui != 3:
-            return lineup
-        plant_addrs = self._get_plant_addresses()
-        plants_offset = self.data.lawn.board.plants
-        plant_row_offset = plants_offset.row
-        plant_col_offset = plants_offset.col
-        plant_type_offset = plants_offset.type
-        plant_asleep_offset = plants_offset.asleep
-        plant_imitator_offset = plants_offset.imitator
-        for addr in plant_addrs:
-            row = self.read_memory(addr + plant_row_offset, 4)
-            col = self.read_memory(addr + plant_col_offset, 4)
-            index = row * 9 + col
-            plant_type = self.read_memory(addr + plant_type_offset, 4)
-            imitator = self.read_memory(addr + plant_imitator_offset, 1) == 48
-            if plant_type == 16:
-                lineup.base[index] = 1
-                lineup.base_is_imitator[index] = imitator
-            elif plant_type == 33:
-                lineup.base[index] = 2
-                lineup.base_is_imitator[index] = imitator
-            elif plant_type == 30:
-                lineup.pumpkins[index] = 1
-                lineup.pumpkins_is_imitator[index] = imitator
-            elif plant_type == 35:
-                lineup.coffee_beans[index] = 1
-                lineup.coffee_beans_is_imitator[index] = imitator
-            else:
-                is_asleep = self.read_memory(addr + plant_asleep_offset, 1)
-                lineup.plants[index] = plant_type + 1
-                lineup.plants_is_imitator[index] = imitator
-                lineup.plants_is_asleep[index] = is_asleep
-
-        grid_item_addrs = self._get_grid_items([1, 3, 11])
-        grid_items_offset = self.data.lawn.board.grid_items
-        grid_items_row_offset = grid_items_offset.row
-        grid_items_col_offset = grid_items_offset.col
-        grid_items_type_offset = grid_items_offset.type
-        for addr in grid_item_addrs:
-            row = self.read_memory(addr + grid_items_row_offset, 4)
-            col = self.read_memory(addr + grid_items_col_offset, 4)
-            index = row * 9 + col
-            grid_item_type = self.read_memory(addr + grid_items_type_offset, 4)
-            if grid_item_type == 1:
-                lineup.base[index] = 3
-            elif grid_item_type == 3:
-                lineup.ladders[index] = 1
-            else:
-                lineup.rakes[index] = 1
-        lineup.compress()
-        return lineup
-
-    def set_lineup(self, lineup: Lineup):
-        if not self.is_open():
-            return
-        ui = self.game_ui()
-        if ui != 2 and ui != 3:
-            return
-        scene = self.get_scene()
-        if scene < 0 or scene > 5 or lineup.scene < 0 or lineup.scene > 5:
-            return
-        if scene != lineup.scene:
-            self.set_scene(lineup.scene)
-        else:
-            self.delete_all_plants()
-            self.delete_grid_items({1, 2, 3, 7, 11})
-        rakes = []
-        self.asm.asm_init()
-        for r in range(6):
-            for c in range(9):
-                index = r * 9 + c
-                if lineup.base[index] == 1:
-                    self._asm_put_plant(16, r, c, lineup.base_is_imitator[index])
-                elif lineup.base[index] == 2:
-                    self._asm_put_plant(33, r, c, lineup.base_is_imitator[index])
-                if lineup.pumpkins[index]:
-                    self._asm_put_plant(30, r, c, lineup.pumpkins_is_imitator[index])
-                if lineup.coffee_beans[index]:
-                    self._asm_put_plant(35, r, c, lineup.coffee_beans_is_imitator[index])
-                if lineup.plants[index]:
-                    plant_type = lineup.plants[index] - 1
-                    if plant_type < 0 or plant_type > 52\
-                            or plant_type == 16 or plant_type == 33\
-                            or plant_type == 30 or plant_type == 35:
-                        continue
-                    is_imitator = lineup.plants_is_imitator[index]
-                    self._asm_put_plant(plant_type, r, c, is_imitator)
-                    if lineup.scene == 0 or lineup.scene == 2 or lineup.scene == 4:
-                        if not lineup.plants_is_asleep[index] and MAY_ASLEEP[plant_type]:
-                            self.asm.asm_push_exx(Reg.EAX)
-                            self.asm.asm_mov_exx_exx(Reg.EDI, Reg.EAX)
-                            self.asm.asm_push_byte(0)
-                            self.asm.asm_call(self.data.call_set_plant_sleeping)
-                            self.asm.asm_pop_exx(Reg.EAX)
-                    if plant_type == 4 or plant_type == 9 or plant_type == 47:
-                        self.asm.asm_mov_dword_ptr_exx_add_offset(Reg.EAX, 0x54, 1)
-
-                if lineup.base[index] == 3:
-                    self._asm_put_grave(r, c)
-                if lineup.ladders[index]:
-                    self._asm_put_ladder(r, c)
-                if lineup.rakes[index]:
-                    rakes.append((r, c))
-        self.asm.asm_ret()
-        self.asm_code_execute()
-
-        reset_dec_rake_code = self.read_memory(0x41786a, 6)
-        reset_rake_col_code = self.read_memory(0x4177d7, 4)
-        self.write_memory(0x41786a, 0x9000000000bf, 6)
-        self.hack(self.data.rake_unlimited, True)
-        for row, col in rakes:
-            self._asm_put_rake(row, col)
-        self.write_memory(0x41786a, reset_dec_rake_code, 6)
-        self.write_memory(0x4177d7, reset_rake_col_code, 4)
-        self.hack(self.data.rake_unlimited, False)
+    # lineup布置功能不被需要了，于2024.5.16删除
+    # def get_lineup(self):
+    #     if not self.is_open():
+    #         return
+    #     ui = self.game_ui()
+    #     lineup = Lineup()
+    #     lineup.scene = self.get_scene()
+    #     if ui != 2 and ui != 3:
+    #         return lineup
+    #     plant_addrs = self._get_plant_addresses()
+    #     plants_offset = self.data.lawn.board.plants
+    #     plant_row_offset = plants_offset.row
+    #     plant_col_offset = plants_offset.col
+    #     plant_type_offset = plants_offset.type
+    #     plant_asleep_offset = plants_offset.asleep
+    #     plant_imitator_offset = plants_offset.imitator
+    #     for addr in plant_addrs:
+    #         row = self.read_memory(addr + plant_row_offset, 4)
+    #         col = self.read_memory(addr + plant_col_offset, 4)
+    #         index = row * 9 + col
+    #         plant_type = self.read_memory(addr + plant_type_offset, 4)
+    #         imitator = self.read_memory(addr + plant_imitator_offset, 1) == 48
+    #         if plant_type == 16:
+    #             lineup.base[index] = 1
+    #             lineup.base_is_imitator[index] = imitator
+    #         elif plant_type == 33:
+    #             lineup.base[index] = 2
+    #             lineup.base_is_imitator[index] = imitator
+    #         elif plant_type == 30:
+    #             lineup.pumpkins[index] = 1
+    #             lineup.pumpkins_is_imitator[index] = imitator
+    #         elif plant_type == 35:
+    #             lineup.coffee_beans[index] = 1
+    #             lineup.coffee_beans_is_imitator[index] = imitator
+    #         else:
+    #             is_asleep = self.read_memory(addr + plant_asleep_offset, 1)
+    #             lineup.plants[index] = plant_type + 1
+    #             lineup.plants_is_imitator[index] = imitator
+    #             lineup.plants_is_asleep[index] = is_asleep
+    #
+    #     grid_item_addrs = self._get_grid_items([1, 3, 11])
+    #     grid_items_offset = self.data.lawn.board.grid_items
+    #     grid_items_row_offset = grid_items_offset.row
+    #     grid_items_col_offset = grid_items_offset.col
+    #     grid_items_type_offset = grid_items_offset.type
+    #     for addr in grid_item_addrs:
+    #         row = self.read_memory(addr + grid_items_row_offset, 4)
+    #         col = self.read_memory(addr + grid_items_col_offset, 4)
+    #         index = row * 9 + col
+    #         grid_item_type = self.read_memory(addr + grid_items_type_offset, 4)
+    #         if grid_item_type == 1:
+    #             lineup.base[index] = 3
+    #         elif grid_item_type == 3:
+    #             lineup.ladders[index] = 1
+    #         else:
+    #             lineup.rakes[index] = 1
+    #     lineup.compress()
+    #     return lineup
+    #
+    # def set_lineup(self, lineup):
+    #     if not self.is_open():
+    #         return
+    #     ui = self.game_ui()
+    #     if ui != 2 and ui != 3:
+    #         return
+    #     scene = self.get_scene()
+    #     if scene < 0 or scene > 5 or lineup.scene < 0 or lineup.scene > 5:
+    #         return
+    #     if scene != lineup.scene:
+    #         self.set_scene(lineup.scene)
+    #     else:
+    #         self.delete_all_plants()
+    #         self.delete_grid_items({1, 2, 3, 7, 11})
+    #     rakes = []
+    #     self.asm.asm_init()
+    #     for r in range(6):
+    #         for c in range(9):
+    #             index = r * 9 + c
+    #             if lineup.base[index] == 1:
+    #                 self._asm_put_plant(16, r, c, lineup.base_is_imitator[index])
+    #             elif lineup.base[index] == 2:
+    #                 self._asm_put_plant(33, r, c, lineup.base_is_imitator[index])
+    #             if lineup.pumpkins[index]:
+    #                 self._asm_put_plant(30, r, c, lineup.pumpkins_is_imitator[index])
+    #             if lineup.coffee_beans[index]:
+    #                 self._asm_put_plant(35, r, c, lineup.coffee_beans_is_imitator[index])
+    #             if lineup.plants[index]:
+    #                 plant_type = lineup.plants[index] - 1
+    #                 if plant_type < 0 or plant_type > 52\
+    #                         or plant_type == 16 or plant_type == 33\
+    #                         or plant_type == 30 or plant_type == 35:
+    #                     continue
+    #                 is_imitator = lineup.plants_is_imitator[index]
+    #                 self._asm_put_plant(plant_type, r, c, is_imitator)
+    #                 if lineup.scene == 0 or lineup.scene == 2 or lineup.scene == 4:
+    #                     if not lineup.plants_is_asleep[index] and MAY_ASLEEP[plant_type]:
+    #                         self.asm.asm_push_exx(Reg.EAX)
+    #                         self.asm.asm_mov_exx_exx(Reg.EDI, Reg.EAX)
+    #                         self.asm.asm_push_byte(0)
+    #                         self.asm.asm_call(self.data.call_set_plant_sleeping)
+    #                         self.asm.asm_pop_exx(Reg.EAX)
+    #                 if plant_type == 4 or plant_type == 9 or plant_type == 47:
+    #                     self.asm.asm_mov_dword_ptr_exx_add_offset(Reg.EAX, 0x54, 1)
+    #
+    #             if lineup.base[index] == 3:
+    #                 self._asm_put_grave(r, c)
+    #             if lineup.ladders[index]:
+    #                 self._asm_put_ladder(r, c)
+    #             if lineup.rakes[index]:
+    #                 rakes.append((r, c))
+    #     self.asm.asm_ret()
+    #     self.asm_code_execute()
+    #
+    #     reset_dec_rake_code = self.read_memory(0x41786a, 6)
+    #     reset_rake_col_code = self.read_memory(0x4177d7, 4)
+    #     self.write_memory(0x41786a, 0x9000000000bf, 6)
+    #     self.hack(self.data.rake_unlimited, True)
+    #     for row, col in rakes:
+    #         self._asm_put_rake(row, col)
+    #     self.write_memory(0x41786a, reset_dec_rake_code, 6)
+    #     self.write_memory(0x4177d7, reset_rake_col_code, 4)
+    #     self.hack(self.data.rake_unlimited, False)
 
     def zombie_not_explode(self, status):
         if not self.is_open():
