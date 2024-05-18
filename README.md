@@ -12,6 +12,16 @@ The toolkit is only for studying or entertaining purpose. What's more, I'm now j
 
 本项目仅用于学习和娱乐。本人仍为高中生，对GitHub和CE了解不深，如有建议或疑问还请指出。
 
+# How is the project now
+
+It's still under updating. Sorry but i dong't have much time to update because i'm still a student.
+
+项目还在持续更新哦，但我还要上学，更新速度可能会非——常——慢——抱歉啦~
+
 # How To Use It
+
+Operating the program without GUI may be a little difficult, so i'm going to upload a video to give instructions. The video is supposed to release in August this year. 
+
+详细操作说明将会于今年八月左右上传B站。
 
 *To be continued...*
