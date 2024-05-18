@@ -1,0 +1,86 @@
+Make your texts the only item in a row to write comments in this file.
+Lines which contain infos should fit the pattern:
+id(0-47or50-81) {comma} alias {comma} num(>=0) {comma} vase_style(e.g.q3&p1&z1)(optional)
+
+0,Peashooter
+1,Sunflower
+2,Cherry Bomb
+3,Wall-nut,3
+4,Potato Mine
+5,Snow Pea,3
+6,Chomper
+7,Repeater
+8,Puff-shroom
+9,Sun-shroom
+10,Fume-shroom
+11,Grave Buster
+12,Hypno-shroom
+13,Scaredy-shroom
+14,Ice-shroom,2
+15,Doom-shroom
+16,Lily Pad
+17,Squash,6,q4&p2
+18,Threepeater
+19,Tangle Kelp
+20,Jalapeno
+21,Spikeweed
+22,Torchwood
+23,Tall-nut
+24,Sea-shroom
+25,Plantern,1
+26,Cactus
+27,Blover
+28,Split Pea
+29,Starfruit
+30,Pumpkin
+31,Magnet-shroom
+32,Cabbage-pult
+33,Flower Pot
+34,Kernel-pult
+35,Coffee Bean
+36,Garlic
+37,Umbrella Leaf
+38,Marigold
+39,Melon-pult
+40,Gatling Pea
+41,Twin Sunflower
+42,Gloom-shroom
+43,Cattail
+44,Winter Melon
+45,Gold Magnet
+46,Spikerock
+47,Cob Cannon
+
+50,Zombie
+51,Flag Zombie
+52,Conehead Zombie
+53,Pole Vaulting Zombie,2
+54,Buckethead Zombie,3
+55,Newspaper Zombie
+56,Screen Door Zombie
+57,Football Zombie
+58,Dancing Zombie,1
+59,Backup Dancer,2
+60,Ducky Tube Zombie
+61,Snorkel Zombie
+62,Zomboni
+63,Zombie Bobsled Team
+64,Dolphin Rider Zombie
+65,Jack-in-the-Box Zombie,1
+66,Balloon Zombie
+67,Digger Zombie
+68,Pogo Zombie
+69,Zombie Yeti
+70,Bungee Zombie
+71,Ladder Zombie,2
+72,Catapult Zombie
+73,Gargantuar,1
+74,Imp
+75,Dr. Zomboss
+76,Peashooter Zombie
+77,Wall-nut Zombie
+78,Jalapeno Zombie
+79,Gatling Pea Zombie
+80,Squash Zombie,2
+81,Tall-nut Zombie
+82,Giga-gargantuar
