@@ -5,7 +5,7 @@ id(0-47or50-81) {comma} alias {comma} num(>=0) {comma} vase_style(e.g.q3&p1&z1)(
 0,Peashooter
 1,Sunflower
 2,Cherry Bomb
-3,Wall-nut,3
+3,Wall-nut,2
 4,Potato Mine
 5,Snow Pea,3
 6,Chomper
@@ -25,14 +25,14 @@ id(0-47or50-81) {comma} alias {comma} num(>=0) {comma} vase_style(e.g.q3&p1&z1)(
 20,Jalapeno
 21,Spikeweed
 22,Torchwood
-23,Tall-nut
+23,Tall-nut,2
 24,Sea-shroom
-25,Plantern,1
+25,Plantern
 26,Cactus
 27,Blover
 28,Split Pea
 29,Starfruit
-30,Pumpkin
+30,Pumpkin,2
 31,Magnet-shroom
 32,Cabbage-pult
 33,Flower Pot
@@ -55,12 +55,12 @@ id(0-47or50-81) {comma} alias {comma} num(>=0) {comma} vase_style(e.g.q3&p1&z1)(
 51,Flag Zombie
 52,Conehead Zombie
 53,Pole Vaulting Zombie,2
-54,Buckethead Zombie,3
+54,Buckethead Zombie,2
 55,Newspaper Zombie
-56,Screen Door Zombie
+56,Screen Door Zombie,2
 57,Football Zombie
 58,Dancing Zombie,1
-59,Backup Dancer,2
+59,Backup Dancer
 60,Ducky Tube Zombie
 61,Snorkel Zombie
 62,Zomboni

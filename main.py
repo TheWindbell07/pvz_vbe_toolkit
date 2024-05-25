@@ -234,6 +234,7 @@ class Puzzle:  # 珍珑
                         sun_shine_count=25
                     )
                     cnt += 1
+        self.target.kill_all_zombies()
 
 
 if __name__ == '__main__':
